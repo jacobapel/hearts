@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3d0f18">
+<title>לבבות</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Frank+Ruhl+Libre:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ece2d6; --ink:#2a1a1f; --muted:#6f5b60; --panel:#fffaf2; --line:#d8c6b6;
+  --felt:#6a1e2b; --felt2:#3d0f18; --rim:#2b0a11;
+  --brass:#c9a24a; --brass-soft:#ecd49a;
+  --card:#fbf6ea; --card-ink:#1e191b; --card-red:#b3142d; --back:#7d2232;
+  --cw:clamp(52px,14.2vw,86px); --ch:calc(var(--cw)*1.42);
+  --tw:clamp(48px,12.5vw,76px); --th:calc(var(--tw)*1.42);
+  --serif:"Frank Ruhl Libre",Georgia,"Times New Roman",serif;
+  --sans:"Assistant","Segoe UI",Arial,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){ --bg:#14090c; --ink:#f2e7df; --muted:#b9a0a6; --panel:#22141a; --line:#3e272e; }
+}
+:root[data-theme="dark"]{ --bg:#14090c; --ink:#f2e7df; --muted:#b9a0a6; --panel:#22141a; --line:#3e272e; }
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+  -webkit-tap-highlight-color:transparent;overscroll-behavior:none;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit;cursor:pointer}
+#app{height:100%;display:grid;grid-template-rows:auto 1fr;max-width:900px;margin:0 auto}
+
+/* header */
+.bar{display:flex;align-items:center;gap:6px;padding:8px 12px}
+.bar h1{font-family:var(--serif);font-weight:700;font-size:1.45rem;margin:0;flex:1;letter-spacing:.01em}
+.bar h1 span:last-child{color:var(--card-red)}
+.bar .sub{font-size:.85rem;color:var(--muted);font-weight:600}
+.ibtn{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px;font-size:.9rem;font-weight:600}
+.ibtn:focus-visible,.btn:focus-visible,.card:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+
+/* table */
+.table{position:relative;margin:0 6px 6px;border-radius:28px;overflow:hidden;
+  background:radial-gradient(ellipse 80% 60% at 50% 42%,var(--felt) 0%,var(--felt2) 100%);
+  box-shadow:inset 0 0 0 3px var(--rim),inset 0 0 0 5px rgba(201,162,74,.55),inset 0 0 60px rgba(0,0,0,.45);
+  display:grid;grid-template-columns:minmax(64px,auto) 1fr minmax(64px,auto);
+  grid-template-rows:auto 1fr auto auto;grid-template-areas:"top top top" "left mid right" "me me me" "hand hand hand";
+  color:#f6ead6;min-height:0}
+.table::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.18;
+  background:repeating-linear-gradient(45deg,rgba(0,0,0,.25) 0 1px,transparent 1px 4px)}
+.seat{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;z-index:1}
+.seat[data-rel="2"]{grid-area:top}
+.seat[data-rel="1"]{grid-area:left;justify-content:center}
+.seat[data-rel="3"]{grid-area:right;justify-content:center}
+.seat[data-rel="0"]{grid-area:me;flex-direction:row;justify-content:center;padding:4px 6px 2px}
+.plate{display:flex;align-items:center;gap:7px;padding:4px 10px 4px 6px;border-radius:999px;
+  background:rgba(20,4,8,.45);border:1px solid rgba(236,212,154,.18);transition:box-shadow .25s,border-color .25s}
+.seat.turn .plate{border-color:var(--brass);box-shadow:0 0 0 2px rgba(201,162,74,.35),0 0 18px rgba(236,212,154,.35)}
+.av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:.85rem;
+  background:var(--brass);color:#2b0a11;flex:none}
+.seat.offline .av{background:#7a6a6a}
+.who{display:flex;flex-direction:column;line-height:1.1}
+.who b{font-size:.92rem;font-weight:700;white-space:nowrap;max-width:9.5em;overflow:hidden;text-overflow:ellipsis}
+.who small{font-size:.75rem;opacity:.8;white-space:nowrap}
+.score{font-family:var(--serif);font-weight:700;font-size:1.15rem;min-width:1.6em;text-align:center;color:var(--brass-soft)}
+.tags{display:flex;gap:4px;align-items:center;font-size:.72rem;min-height:18px}
+.tag{padding:1px 7px;border-radius:999px;background:rgba(0,0,0,.35);white-space:nowrap}
+.tag.pts{color:#ffd0d6}.tag.ok{color:#cfe8b8}.tag.off{color:#ffb4a8}
+.stack{position:relative;width:calc(var(--tw)*.62);height:calc(var(--tw)*.88)}
+.stack .back{position:absolute;inset:0;border-radius:6px}
+.stack .back:nth-child(2){transform:translate(3px,-3px)}
+.stack .back:nth-child(3){transform:translate(6px,-6px)}
+.stack .n{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--serif);font-weight:700;
+  font-size:1rem;color:var(--brass-soft);z-index:3;text-shadow:0 1px 2px #000;transform:translate(6px,-6px)}
+.seat[data-rel="1"] .plate,.seat[data-rel="3"] .plate{flex-direction:column;border-radius:16px;padding:6px 8px;gap:3px}
+.seat[data-rel="1"] .who,.seat[data-rel="3"] .who{align-items:center;text-align:center}
+
+/* center */
+.mid{grid-area:mid;display:grid;place-items:center;position:relative;z-index:1;min-height:0}
+.trick{position:relative;width:min(100%,calc(var(--tw)*3.6));aspect-ratio:1/1;max-height:100%}
+.status{position:absolute;inset:auto 0 50% 0;transform:translateY(50%);text-align:center;padding:0 8px;
+  font-size:.98rem;font-weight:600;pointer-events:none;transition:opacity .2s;text-wrap:balance}
+.status .arrow{display:block;font-size:2.2rem;line-height:1;color:var(--brass-soft);margin-bottom:4px}
+.trick.busy + .status{opacity:0}
+.trick .tcard{position:absolute;left:50%;top:50%;width:var(--tw);height:var(--th);margin:calc(var(--th)/-2) 0 0 calc(var(--tw)/-2);
+  transition:transform .38s cubic-bezier(.2,.8,.25,1),opacity .38s;will-change:transform}
+.tcard.win{box-shadow:0 0 0 2px var(--brass),0 6px 18px rgba(0,0,0,.45)}
+
+/* cards */
+.card{position:relative;background:var(--card);color:var(--card-ink);border-radius:9%/6.5%;
+  box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 3px 8px rgba(0,0,0,.35);font-family:var(--serif);overflow:hidden}
+.card.red{color:var(--card-red)}
+.card .idx{position:absolute;top:5%;left:7%;display:flex;flex-direction:column;align-items:center;line-height:.9}
+.card .idx b{font-size:calc(var(--sz)*.27);font-weight:700}
+.card .idx i{font-style:normal;font-size:calc(var(--sz)*.22)}
+.card .idx.flip{top:auto;left:auto;bottom:5%;right:7%;transform:rotate(180deg)}
+.card .pip{position:absolute;inset:0;display:grid;place-items:center;font-size:calc(var(--sz)*.5)}
+.card.court .pip{flex-direction:column;inset:18% 16%;border:1px solid currentColor;border-radius:5px;opacity:.95;
+  display:flex;align-items:center;justify-content:center;font-size:calc(var(--sz)*.26);gap:0}
+.card.court .pip em{font-style:normal;font-weight:700;font-size:calc(var(--sz)*.42);line-height:1}
+.card[data-id="S12"] .pip{background:linear-gradient(transparent,rgba(179,20,45,.08))}
+.back{background:var(--back);border-radius:9%/6.5%;box-shadow:0 2px 6px rgba(0,0,0,.45);
+  background-image:repeating-linear-gradient(45deg,rgba(236,212,154,.28) 0 1.5px,transparent 1.5px 7px),
+  repeating-linear-gradient(-45deg,rgba(236,212,154,.28) 0 1.5px,transparent 1.5px 7px);
+  outline:2px solid rgba(251,246,234,.85);outline-offset:-4px}
+.tcard{--sz:var(--tw)}
+
+/* hand */
+.handzone{grid-area:hand;position:relative;z-index:2;padding:6px 10px 12px}
+.hand{position:relative;height:calc(var(--ch) + 22px);direction:ltr}
+.hand .card{--sz:var(--cw);position:absolute;bottom:0;width:var(--cw);height:var(--ch);
+  transition:transform .18s ease,filter .18s,left .25s ease;cursor:pointer;touch-action:manipulation}
+.hand .card.sel{transform:translateY(-20px);box-shadow:0 0 0 2.5px var(--brass),0 8px 16px rgba(0,0,0,.45)}
+.hand .card.got{transform:translateY(-20px);box-shadow:0 0 0 2.5px var(--brass),0 8px 16px rgba(0,0,0,.45)}
+.hand .card.dim{filter:brightness(.55) saturate(.6);cursor:default}
+.hand .card.new::after{content:"";position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:50%;
+  background:var(--brass);box-shadow:0 0 0 2px var(--card)}
+@media (hover:hover){.hand.can .card:not(.dim):not(.sel):hover{transform:translateY(-8px)}}
+.actions{display:flex;justify-content:center;gap:8px;min-height:0}
+.btn{border:0;border-radius:999px;padding:10px 22px;font-weight:700;font-size:1rem;background:var(--brass);color:#2b0a11;
+  box-shadow:0 3px 0 #8e6f2a}
+.btn:disabled{opacity:.45;box-shadow:none}
+.btn.ghost{background:transparent;color:inherit;border:1px solid currentColor;box-shadow:none}
+.actions .btn{margin-top:6px}
+
+/* bubbles */
+.bubble{position:absolute;z-index:20;font-size:1.8rem;pointer-events:none;animation:pop 2.4s ease forwards;
+  left:50%;top:-6px;transform:translateX(-50%)}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,8px) scale(.6)}12%{opacity:1;transform:translate(-50%,-6px) scale(1.1)}
+  20%{transform:translate(-50%,-4px) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-22px)}}
+
+/* modal */
+.scrim{position:fixed;inset:0;z-index:50;background:rgba(10,2,5,.55);display:grid;place-items:center;padding:16px;
+  padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.sheet{background:var(--panel);color:var(--ink);border-radius:20px;width:min(440px,100%);max-height:100%;overflow:auto;
+  padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.4);border:1px solid var(--line)}
+.sheet h2{font-family:var(--serif);font-size:1.5rem;margin:0 0 4px}
+.sheet p{margin:.3em 0 .8em;color:var(--muted);line-height:1.5}
+.sheet .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-start;margin-top:14px}
+.sheet .btn.ghost{color:var(--ink);border-color:var(--line)}
+.tbl-wrap{overflow-x:auto}
+table.sc{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+table.sc th,table.sc td{padding:6px 6px;text-align:center;border-bottom:1px solid var(--line)}
+table.sc th{font-size:.85rem;color:var(--muted);font-weight:700}
+table.sc td.n{text-align:start;font-weight:700}
+table.sc tr.tot td{font-family:var(--serif);font-weight:700;font-size:1.15rem;border-bottom:0}
+table.sc .best{color:var(--card-red)}
+.minitrick{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:10px 0}
+.minitrick figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.8rem;color:var(--muted)}
+.minitrick .card{--sz:58px;width:58px;height:82px}
+.minitrick figure.w .card{box-shadow:0 0 0 2.5px var(--brass)}
+.menu-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.menu-list .btn{width:100%}
+.rules{line-height:1.6;color:var(--ink)}
+.rules li{margin-bottom:4px}
+.field{display:flex;flex-direction:column;gap:4px;margin:10px 0}
+.field label{font-size:.85rem;font-weight:700;color:var(--muted)}
+.field input{font:inherit;font-size:1.05rem;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.field input.code{letter-spacing:.3em;text-transform:uppercase;font-weight:700;text-align:center;direction:ltr}
+.err{color:var(--card-red);font-weight:600;min-height:1.2em;margin:4px 0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (min-height:760px) and (min-width:600px){:root{--cw:clamp(60px,9vw,92px)}}
+.sheet h3{font-family:var(--serif);font-size:1.1rem;margin:18px 0 4px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.stat{border:1px solid var(--line);border-radius:14px;padding:10px 6px;text-align:center;display:flex;flex-direction:column;gap:2px}
+.stat b{font-family:var(--serif);font-size:1.45rem;font-weight:700;color:var(--card-red);font-variant-numeric:tabular-nums}
+.stat span{font-size:.78rem;color:var(--muted);line-height:1.25}
+tr.clk{cursor:pointer}
+tr.clk:hover td{background:rgba(201,162,74,.12)}
+.sheet .row .btn{flex:1 1 auto}
+
+.rv{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.rv:last-of-type{border-bottom:0}
+.rv-h{font-size:.92rem;color:var(--muted);line-height:1.3}
+.rv-h b{display:block;color:var(--ink);font-size:1rem}
+.rv-c{display:flex;gap:5px;flex:none;direction:ltr}
+.rv-c .card{--sz:46px;width:46px;height:65px}
+.rv.me .rv-c .card{box-shadow:0 0 0 2px var(--brass),0 3px 8px rgba(0,0,0,.3)}
+
+.status .claim{display:inline-flex;flex-direction:column;align-items:center;gap:10px;padding:14px 16px;border-radius:18px;
+  background:rgba(25,5,10,.88);border:2px solid var(--brass);box-shadow:0 10px 30px rgba(0,0,0,.5);
+  font-size:1.12rem;line-height:1.35;animation:claimIn .35s ease-out}
+.status .claim small{font-size:.95rem;color:var(--brass-soft)}
+.claim-cards{display:flex;justify-content:center;direction:ltr}
+.claim-cards .card{--sz:40px;width:40px;height:57px;margin-left:-12px}
+.claim-cards .card:first-child{margin-left:0}
+@keyframes claimIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+.status .claim small.claim-foot{color:#f6ead6;opacity:.85;font-size:.88rem}
+
+</style>
+
+</head>
+<body>
+<script>
+/* ===== Hearts engine (pure logic, shared) ===== */
+const Hearts = (() => {
+  const SUITS = ['C', 'D', 'S', 'H'];
+  const SYM = { C: '♣', D: '♦', S: '♠', H: '♥' };
+  const SUIT_NAME = { C: 'תלתן', D: 'יהלום', S: 'עלה', H: 'לב' };
+  const RANK_TXT = { 11: 'J', 12: 'Q', 13: 'K', 14: 'A' };
+  const PASS_OFFSET = [1, 3, 2, 0]; // left, right, across, none (seats go clockwise)
+  const suit = c => c[0];
+  const rank = c => +c.slice(1);
+  const rankTxt = r => RANK_TXT[r] || String(r);
+  const pts = c => (suit(c) === 'H' ? 1 : c === 'S12' ? 13 : 0);
+  const sortHand = h => h.slice().sort((a, b) =>
+    SUITS.indexOf(suit(a)) - SUITS.indexOf(suit(b)) || rank(a) - rank(b));
+
+  function shuffle(a) {
+    const rnd = (n) => {
+      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        const u = new Uint32Array(1); crypto.getRandomValues(u); return u[0] % n;
+      }
+      return Math.floor(Math.random() * n);
+    };
+    for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+  function deal() {
+    const d = [];
+    for (const s of SUITS) for (let r = 2; r <= 14; r++) d.push(s + r);
+    shuffle(d);
+    return [0, 1, 2, 3].map(i => sortHand(d.slice(i * 13, i * 13 + 13)));
+  }
+  const passTarget = (seat, dir) => (seat + PASS_OFFSET[dir]) % 4;
+
+  function legalPlays(hand, trick, heartsBroken, firstTrick) {
+    if (!hand.length) return [];
+    if (!trick.length) {
+      if (firstTrick && hand.includes('C2')) return ['C2'];
+      if (!heartsBroken) {
+        const non = hand.filter(c => suit(c) !== 'H');
+        if (non.length) return non;
+      }
+      return hand.slice();
+    }
+    const led = suit(trick[0].card);
+    const follow = hand.filter(c => suit(c) === led);
+    if (follow.length) return follow;
+    if (firstTrick) {
+      const safe = hand.filter(c => pts(c) === 0);
+      if (safe.length) return safe;
+    }
+    return hand.slice();
+  }
+  function trickWinner(trick) {
+    const led = suit(trick[0].card);
+    let best = trick[0];
+    for (const t of trick) if (suit(t.card) === led && rank(t.card) > rank(best.card)) best = t;
+    return best.seat;
+  }
+  const four = v => [v, v, v, v];
+
+  function newGame(names, target = 100) {
+    return { names: names.slice(), target, scores: four(0), history: [], handNum: -1,
+      phase: 'lobby', seq: 0 };
+  }
+  function startHand(g) {
+    g.handNum++;
+    g.hands = deal();
+    g.passDir = g.handNum % 4;
+    g.passSel = four(null);
+    g.passDone = four(false);
+    g.received = [[], [], [], []];
+    g.trick = []; g.lastTrick = null; g.trickWinner = null;
+    g.taken = four(0); g.played = [];
+    g.heartsBroken = false; g.tricksPlayed = 0;
+    g.ready = four(false); g.moon = null; g.handDelta = null; g.winners = null;
+    g.turn = -1; g.leader = -1; g.playOut = false; g.qsBy = null; g.claiming = null; g.claimed = null; g.claimAck = four(false);
+    if (g.passDir === 3) beginPlay(g); else g.phase = 'passing';
+  }
+  function setPass(g, seat, cards) {
+    if (g.phase !== 'passing' || g.passDone[seat]) return false;
+    if (!Array.isArray(cards) || cards.length !== 3 || new Set(cards).size !== 3) return false;
+    if (!cards.every(c => g.hands[seat].includes(c))) return false;
+    g.passSel[seat] = cards.slice();
+    g.passDone[seat] = true;
+    if (g.passDone.every(Boolean)) applyPass(g);
+    return true;
+  }
+  function applyPass(g) {
+    const nh = g.hands.map((h, s) => h.filter(c => !g.passSel[s].includes(c)));
+    g.received = [[], [], [], []];
+    for (let s = 0; s < 4; s++) {
+      const t = passTarget(s, g.passDir);
+      nh[t].push(...g.passSel[s]);
+      g.received[t] = g.passSel[s].slice();
+    }
+    g.hands = nh.map(sortHand);
+    g.passSel = four(null);
+    beginPlay(g);
+  }
+  function beginPlay(g) {
+    g.phase = 'playing';
+    g.leader = g.hands.findIndex(h => h.includes('C2'));
+    g.turn = g.leader;
+    g.trick = [];
+  }
+  function legalFor(g, seat) {
+    if (g.phase !== 'playing' || g.turn !== seat || g.claiming != null) return [];
+    return legalPlays(g.hands[seat], g.trick, g.heartsBroken, g.tricksPlayed === 0);
+  }
+  function playCard(g, seat, card) {
+    if (!legalFor(g, seat).includes(card)) return false;
+    g.hands[seat] = g.hands[seat].filter(c => c !== card);
+    g.trick.push({ seat, card });
+    g.played.push(card);
+    if (suit(card) === 'H') g.heartsBroken = true;
+    if (g.trick.length === 4) {
+      g.trickWinner = trickWinner(g.trick);
+      g.phase = 'trickEnd'; g.turn = -1;
+    } else g.turn = (seat + 1) % 4;
+    return true;
+  }
+  function collectTrick(g) {
+    if (g.phase !== 'trickEnd') return false;
+    const w = g.trickWinner;
+    g.taken[w] += g.trick.reduce((s, t) => s + pts(t.card), 0);
+    if (g.trick.some(t => t.card === 'S12')) g.qsBy = w;
+    g.lastTrick = { cards: g.trick, winner: w };
+    g.trick = []; g.trickWinner = null;
+    g.tricksPlayed++;
+    if (g.tricksPlayed === 13) endHand(g);
+    else { g.phase = 'playing'; g.leader = w; g.turn = w; }
+    return true;
+  }
+  function endHand(g) {
+    let delta = g.taken.slice();
+    const m = delta.indexOf(26);
+    if (m >= 0) { delta = delta.map((_, i) => (i === m ? 0 : 26)); g.moon = m; }
+    g.handDelta = delta;
+    g.scores = g.scores.map((s, i) => s + delta[i]);
+    g.history.push(delta);
+    (g.handInfo = g.handInfo || []).push({ qs: g.qsBy, moon: g.moon });
+    g.turn = -1; g.ready = four(false);
+    if (Math.max(...g.scores) >= g.target) {
+      const min = Math.min(...g.scores);
+      g.winners = [0, 1, 2, 3].filter(i => g.scores[i] === min);
+      g.phase = 'gameOver';
+    } else g.phase = 'handEnd';
+  }
+  // Seat that is certain to win every remaining trick (it leads now), or -1.
+  // true if seat p is guaranteed every remaining trick, whatever the others play (full search; small hands only)
+  function winsAll(hands, trick, turn, hb, p) {
+    const legal = legalPlays(hands[turn], trick, hb, false);
+    const tryCard = c => {
+      const h = hands.slice(); h[turn] = hands[turn].filter(x => x !== c);
+      const tr = trick.concat([{ seat: turn, card: c }]);
+      const nhb = hb || suit(c) === 'H';
+      if (tr.length < 4) return winsAll(h, tr, (turn + 1) % 4, nhb, p);
+      if (trickWinner(tr) !== p) return false;
+      return h[p].length === 0 || winsAll(h, [], p, nhb, p);
+    };
+    return turn === p ? legal.some(tryCard) : legal.every(tryCard);
+  }
+  let claimMemo = { key: '', val: -1 };
+  function claimant(g) {
+    if (g.phase !== 'playing' || g.trick.length || g.tricksPlayed < 1 || g.tricksPlayed > 11 || g.claiming != null) return -1;
+    const key = JSON.stringify([g.hands, g.turn, g.heartsBroken]);
+    if (claimMemo.key === key) return claimMemo.val;
+    const v = quickClaim(g);
+    const r = v >= 0 ? v : (g.hands[g.turn].length <= 4 ? [0, 1, 2, 3].find(p => winsAll(g.hands, [], g.turn, g.heartsBroken, p)) : undefined);
+    claimMemo = { key, val: r == null ? -1 : r };
+    return claimMemo.val;
+  }
+  // fast check: the leader holds enough top cards in every suit
+  function quickClaim(g) {
+    const L = g.turn, mine = g.hands[L];
+    for (const s of SUITS) {
+      const my = mine.filter(c => suit(c) === s);
+      if (!my.length) continue;
+      const opp = [0, 1, 2, 3].filter(p => p !== L).map(p => g.hands[p].filter(c => suit(c) === s).map(rank));
+      const most = Math.max(...opp.map(a => a.length));
+      if (!most) continue;
+      const top = Math.max(...opp.flat());
+      if (my.filter(c => rank(c) > top).length < most) return -1;
+    }
+    return L;
+  }
+  function claimAll(g) {
+    const w = g.claiming;
+    if (g.phase !== 'playing' || w == null) return false;
+    const rest = g.hands.flat();
+    const p = rest.reduce((a, c) => a + pts(c), 0);
+    g.claimed = { seat: w, tricks: 13 - g.tricksPlayed, pts: p };
+    g.taken[w] += p;
+    if (rest.includes('S12')) g.qsBy = w;
+    g.played.push(...rest);
+    g.hands = g.hands.map(() => []);
+    g.tricksPlayed = 13; g.claiming = null;
+    endHand(g);
+    return true;
+  }
+  // Start a claim; `isBot(seat)` seats confirm automatically, humans must confirm with ackClaim.
+  function startClaim(g, isBot) {
+    const w = claimant(g);
+    if (w < 0) return false;
+    g.claiming = w;
+    g.claimAck = [0, 1, 2, 3].map(s => !!isBot(s));
+    if (g.claimAck.every(Boolean)) claimAll(g);
+    return true;
+  }
+  function ackClaim(g, seat) {
+    if (g.phase !== 'playing' || g.claiming == null) return false;
+    g.claimAck[seat] = true;
+    if (g.claimAck.every(Boolean)) claimAll(g);
+    return true;
+  }
+  const canFinish = g => g.phase === 'playing' && g.claiming == null && !g.trick.length && g.tricksPlayed < 13 &&
+    g.taken.reduce((a, b) => a + b, 0) === 26;
+  function finishHand(g) {
+    if (!canFinish(g)) return false;
+    g.hands = g.hands.map(() => []);
+    endHand(g);
+    return true;
+  }
+  function setReady(g, seat) {
+    if (g.phase !== 'handEnd') return false;
+    g.ready[seat] = true;
+    if (g.ready.every(Boolean)) startHand(g);
+    return true;
+  }
+  return { SUITS, SYM, SUIT_NAME, suit, rank, rankTxt, pts, sortHand, deal, passTarget,
+    legalPlays, trickWinner, newGame, startHand, setPass, legalFor, playCard,
+    collectTrick, setReady, canFinish, finishHand, claimant, claimAll, startClaim, ackClaim, winsAll };
+})();
+if (typeof module !== 'undefined') module.exports = Hearts;
+
+/* ===== Computer player ===== */
+const Bot = (() => {
+  const { suit, rank, pts, legalPlays } = (typeof Hearts !== 'undefined' ? Hearts : require('./engine.js'));
+  const byRank = (a, b) => rank(a) - rank(b);
+  const hi = a => a.slice().sort(byRank).pop();
+  const lo = a => a.slice().sort(byRank)[0];
+
+  function choosePass(hand) {
+    const count = { C: 0, D: 0, S: 0, H: 0 };
+    hand.forEach(c => count[suit(c)]++);
+    const lowSpades = hand.filter(c => suit(c) === 'S' && rank(c) < 12).length;
+    const score = c => {
+      const s = suit(c), r = rank(c);
+      if (c === 'S12') return lowSpades >= 4 ? 18 : 100;
+      if (s === 'S' && r > 12) return lowSpades >= 4 ? 14 : 85;
+      if (c === 'C2') return -10;
+      let v = r;
+      if (s === 'H') v += 8;
+      if ((s === 'C' || s === 'D') && count[s] <= 3) v += 6 + (3 - count[s]) * 3;
+      if (s === 'S') v -= 20;
+      return v;
+    };
+    return hand.slice().sort((a, b) => score(b) - score(a)).slice(0, 3);
+  }
+
+  function choosePlay(g, seat) {
+    const hand = g.hands[seat], trick = g.trick, first = g.tricksPlayed === 0;
+    const legal = legalPlays(hand, trick, g.heartsBroken, first);
+    if (legal.length === 1) return legal[0];
+    const qsOut = g.played.includes('S12');
+    const hasQS = hand.includes('S12');
+    const count = s => hand.filter(x => suit(x) === s).length;
+
+    if (!trick.length) {
+      const cost = c => {
+        const s = suit(c); let v = rank(c);
+        if (s === 'S') {
+          if (c === 'S12') v += 40;
+          else if (hasQS) v += 15;
+          else if (!qsOut && rank(c) > 12) v += 30;
+          else if (!qsOut) v -= 3;
+        }
+        if (s === 'H') v += 10;
+        return v + count(s) * 0.5;
+      };
+      return legal.slice().sort((a, b) => cost(a) - cost(b))[0];
+    }
+
+    const led = suit(trick[0].card);
+    const high = Math.max(...trick.filter(t => suit(t.card) === led).map(t => rank(t.card)));
+    const tp = trick.reduce((s, t) => s + pts(t.card), 0);
+    const last = trick.length === 3;
+
+    if (suit(legal[0]) === led) {
+      if (first) return hi(legal);
+      if (led === 'S' && hasQS && high > 12) return 'S12';
+      const nonQ = legal.filter(c => c !== 'S12');
+      const pool = nonQ.length ? nonQ : legal;
+      if (last && tp === 0) return hi(pool);
+      const below = pool.filter(c => rank(c) < high);
+      if (below.length) return hi(below);
+      return last ? hi(pool) : lo(pool);
+    }
+
+    // void in led suit: dump
+    if (legal.includes('S12')) return 'S12';
+    if (!qsOut) {
+      const big = legal.filter(c => c === 'S14' || c === 'S13');
+      if (big.length) return hi(big);
+    }
+    const hearts = legal.filter(c => suit(c) === 'H');
+    if (hearts.length) return hi(hearts);
+    return legal.slice().sort((a, b) => (count(suit(a)) - count(suit(b))) || (rank(b) - rank(a)))[0];
+  }
+  return { choosePass, choosePlay };
+})();
+if (typeof module !== 'undefined') module.exports = Bot;
+
+/* ===== Languages ===== */
+const I18N = (() => {
+  const NAME_PAIRS = [['אני', 'Me'], ['נועה', 'Emma'], ['דוד', 'David'], ['מיכל', 'Michelle'], ['יוסי', 'Joseph'], ['מחשב', 'Computer']];
+  const D = {
+    he: {
+      title: 'לבבות', titleOnline: 'לבבות ברשת', btnScores: 'ניקוד', btnLast: 'לקיחה', menu: 'תפריט', langBtn: 'English',
+      emptySeat: 'מקום פנוי', tagPassed: 'העביר ✓', tagOffline: 'מנותק', colHand: 'יד', colTotal: 'סה״כ', me: ' (אני)',
+      noTrick: 'עוד לא נלקחה אף לקיחה ביד הזו.', tookTrick: n => `${n} לקח/ה את הלקיחה.`,
+      suits: { C: 'תלתן', D: 'יהלום', S: 'עלה', H: 'לב' },
+      rules: `<div class="rules"><ul>
+        <li>המטרה: לצבור כמה שפחות נקודות. כל לב שווה נקודה, ומלכת העלה (Q♠) שווה 13.</li>
+        <li>לפני כל יד מעבירים 3 קלפים: שמאלה, ימינה, ממול, ובכל יד רביעית אין העברה.</li>
+        <li>מי שמחזיק 2♣ פותח. חובה לשחק באותה צורה אם יש. הקלף הגבוה בצורה שהובלה לוקח.</li>
+        <li>בלקיחה הראשונה אסור לזרוק לבבות או את Q♠ (אלא אם אין ברירה).</li>
+        <li>אי אפשר להוביל לב עד שמישהו זרק לב.</li>
+        <li>מי שלוקח את כל הלבבות וגם את Q♠ "יורה בירח": מקבל 0, וכל השאר 26.</li>
+        <li>כשברור שהשחקן המוביל ייקח את כל הלקיחות שנשארו, הקלפים שלו נחשפים והיד נסגרת אחרי שכל השחקנים מאשרים.</li>
+        <li>המשחק נגמר כשמישהו מגיע ל־100. הנמוך ביותר מנצח.</li></ul>
+        <p>במסך: הקשה על קלף מרימה אותו, הקשה נוספת משחקת אותו.</p></div>`,
+      dirs: ['שמאלה', 'ימינה', 'ממול', 'ללא העברה'],
+      choosePass: n => `בחר 3 קלפים להעביר ל${n}`, choosingNote: 'בוחר קלפים להעברה', passedNote: 'העברת ✓',
+      waitingFor: l => `ממתין ל${l}`,
+      claimYou: k => `אתה לוקח את כל ${k} הלקיחות שנשארו`, claimOther: (n, k) => `${n} לוקח/ת את כל ${k} הלקיחות שנשארו`,
+      plusPts: p => `<bdi dir="ltr">+${p}</bdi> נקודות`, noMorePts: 'בלי נקודות נוספות',
+      pressOk: 'לחץ "אישור" כדי להמשיך', waitConfirm: l => `ממתין לאישור של ${l}`, allYours: 'כל הלקיחות שלך',
+      yourTurn: 'תורך', leadC2: 'פתח עם 2♣', yourLead: 'תורך להוביל', tapAgain: 'הקש שוב כדי לשחק', turnOf: n => `התור של ${n}`,
+      tieFirst: 'תיקו במקום הראשון!', youWon: 'ניצחת!', wonBy: l => `${l} ניצח/ה`, and: ' ו', handOver: n => `סוף יד ${n}`,
+      claimedYou: k => `✋ לקחת את ${k} הלקיחות האחרונות בבת אחת, כי היה ברור שאף אחד לא יכול לנצח בהן.`,
+      claimedOther: (n, k) => `✋ ${n} לקח/ה את ${k} הלקיחות האחרונות בבת אחת, כי היה ברור שאף אחד לא יכול לנצח בהן.`,
+      moon: n => `🌙 ${n} ירה/תה בירח! כל השאר קיבלו 26.`,
+      colPlayer: 'שחקן', colThis: 'ביד הזו', nextHand: d => `היד הבאה: ${d}.`,
+      computer: 'מחשב', handN: n => `יד ${n}`, gotCards: n => `קיבלת 3 קלפים מ${n}, הם מורמים ביד שלך`, gotCardsShort: 'קיבלת 3 קלפים, הם מורמים',
+      passBtn: n => `העבר (${n}/3)`, cont: 'המשך', ok: 'אישור',
+      allTakenH: 'כל הנקודות כבר נלקחו', allTakenP: 'בקלפים שנשארו אין לבבות ואין Q♠, כך שהניקוד של היד לא ישתנה.',
+      finishHand: 'סיים את היד', keepPlaying: 'המשך לשחק', savedStats: 'המשחק נשמר בסטטיסטיקה.',
+      newGame: 'משחק חדש', stats: 'סטטיסטיקה', nextHandBtn: 'יד הבאה',
+      namesH: 'שמות השחקנים', seatLabels: ['אני', 'משמאלי', 'ממולי', 'מימיני'], needName: 'לכל שחקן צריך שם.',
+      save: 'שמור', defaultNames: 'שמות ברירת מחדל', cancel: 'ביטול', close: 'סגור', back: 'חזרה',
+      noGames: 'עוד אין משחקים שהסתיימו. משחק נשמר כאן כשמישהו מגיע ל־100.', importBackup: 'ייבוא גיבוי',
+      tGames: 'משחקים', tWins: 'ניצחונות', tWinPct: 'אחוז ניצחון', tBest: 'ניקוד סופי הכי טוב', tAvgFinal: 'ממוצע ניקוד סופי',
+      tAvgHand: 'נקודות ליד בממוצע', tZero: 'ידיים בלי נקודות', tQs: 'קיבלתי Q♠', tMoonMe: 'ירי בירח שלי', tMoonOther: 'ירי בירח נגדי',
+      tStreak: 'רצף ניצחונות נוכחי', tBestStreak: 'רצף הכי ארוך', bySeat: 'לפי מקום בשולחן', colWins: 'ניצחונות', colAvgFinal: 'ממוצע סופי',
+      recent: 'משחקים אחרונים', tapGame: 'הקש על משחק כדי לראות את הניקוד שלו.', colDate: 'תאריך', colWinner: 'מנצח', colMyScore: 'הניקוד שלי', colHands: 'ידיים',
+      exportBtn: 'גיבוי לקובץ', deleteAll: 'מחק הכל', deleteQ: 'למחוק את כל הסטטיסטיקה?', deleteP: 'כל המשחקים השמורים יימחקו. אי אפשר לבטל.', del: 'מחק',
+      gameFrom: d => `משחק מ־${d}`, backupH: 'גיבוי', backupP: 'אם ההורדה לא התחילה, אפשר להעתיק את הטקסט ולשמור אותו בקובץ.', copy: 'העתק',
+      importedH: 'הגיבוי נטען', importedP: n => `נוספו ${n} משחקים. משחקים שכבר היו שמורים לא שוכפלו.`, toStats: 'לסטטיסטיקה',
+      importFailH: 'הקובץ לא נטען', importFailP: 'זה לא קובץ גיבוי של המשחק. בחר קובץ שנוצר ב"גיבוי לקובץ".',
+      rulesBtn: 'חוקי המשחק', rulesH: 'חוקים', newGameQ: 'להתחיל משחק חדש?', newGameP: 'המשחק הנוכחי לא הסתיים, ולכן לא יישמר בסטטיסטיקה.',
+      yesNew: 'כן, משחק חדש', noHands: 'עוד לא הסתיימה אף יד.', lastTrickH: 'הלקיחה האחרונה', scoresH: 'ניקוד',
+      // online
+      authFail: m => 'ההתחברות נכשלה: ' + m, setupH: 'צריך להגדיר את Firebase',
+      setupP: 'הגרסה הזו משתמשת ב־Firebase Realtime Database כדי לסנכרן את השולחן בין המכשירים. פתחו את הקובץ ומלאו את FIREBASE_CONFIG בראשו, לפי ההוראות בקובץ README.',
+      lobbyP: 'כל שחקן משחק מהמכשיר שלו. צרו שולחן ושלחו את הקישור לחברים.', yourName: 'השם שלך', roomCode: 'קוד שולחן (כדי להצטרף)',
+      joinRoom: 'הצטרף לשולחן', createRoom: 'צור שולחן חדש', needYourName: 'כתוב שם כדי שהחברים יזהו אותך.', codeLen: 'קוד שולחן הוא 4 תווים.',
+      noRoom: c => `לא נמצא שולחן עם הקוד ${c}.`, started: 'המשחק בשולחן הזה כבר התחיל. בקשו מהמארח שולחן חדש.', full: 'השולחן מלא.',
+      goneH: 'השולחן נסגר', goneP: 'השולחן הזה כבר לא קיים.', toNewRoom: 'לשולחן חדש', kickedH: 'המקום שלך נתפס', kickedP: 'המארח פינה את המקום שלך בשולחן.',
+      roomHand: (c, n) => `שולחן ${c}  יד ${n}`, hostDecides: 'כל הנקודות כבר נלקחו. המארח מחליט אם לסיים את היד.',
+      host: 'מארח', hostGone: 'המארח התנתק. המשחק ממשיך כשיחזור.', offlineDot: ' · מנותק', waitingPlayer: 'ממתין לשחקן…', remove: 'הסר', addBot: 'הוסף מחשב',
+      seatN: n => `מקום ${n}`, roomN: c => `שולחן ${c}`, waitP: 'שלחו לחברים את הקישור או את הקוד. הסדר בשולחן הוא עם כיוון השעון לפי מספר המקום.',
+      allHere: 'כולם כאן. אפשר להתחיל.', fillBots: 'אפשר למלא מקומות פנויים בשחקני מחשב.', waitHost: 'ממתינים שהמארח יתחיל את המשחק.',
+      share: 'שתף קישור', startGame: 'התחל משחק', shareText: 'בוא/י לשחק איתי לבבות', copyLink: 'העתק את הקישור:',
+      readyList: l => `מוכנים: ${l}`, nobodyYet: 'עדיין אף אחד', waitOthers: 'ממתין לאחרים…', readyBtn: 'מוכן ליד הבאה',
+      restart: 'משחק חדש באותו שולחן', hostCanRestart: 'המארח יכול לפתוח משחק חדש.', sendReaction: 'שלחו תגובה לשולחן:',
+      offlineToBot: 'שחקן התנתק? אפשר להעביר את המקום שלו למחשב:', toBot: n => `${n} ← מחשב`, codeIs: 'קוד השולחן:',
+    },
+    en: {
+      title: 'Hearts', titleOnline: 'Hearts Online', btnScores: 'Scores', btnLast: 'Last', menu: 'Menu', langBtn: 'עברית',
+      emptySeat: 'Empty seat', tagPassed: 'Passed ✓', tagOffline: 'Offline', colHand: 'Hand', colTotal: 'Total', me: ' (me)',
+      noTrick: 'No trick has been taken yet this hand.', tookTrick: n => `${n} took the trick.`,
+      suits: { C: 'clubs', D: 'diamonds', S: 'spades', H: 'hearts' },
+      rules: `<div class="rules"><ul>
+        <li>Goal: score as few points as possible. Each heart is 1 point, and the Queen of Spades (Q♠) is 13.</li>
+        <li>Before each hand you pass 3 cards: left, right, across, and every fourth hand there is no passing.</li>
+        <li>Whoever holds the 2♣ leads. You must follow suit if you can. The highest card of the suit led wins the trick.</li>
+        <li>On the first trick you may not discard hearts or the Q♠ (unless you have no choice).</li>
+        <li>You can't lead a heart until someone has discarded one.</li>
+        <li>Taking all the hearts and the Q♠ is "shooting the moon": you get 0 and everyone else gets 26.</li>
+        <li>When it's clear the leading player will take every remaining trick, their cards are revealed and the hand ends once all players confirm.</li>
+        <li>The game ends when someone reaches 100. Lowest score wins.</li></ul>
+        <p>On screen: tap a card to raise it, tap it again to play it.</p></div>`,
+      dirs: ['left', 'right', 'across', 'no passing'],
+      choosePass: n => `Choose 3 cards to pass to ${n}`, choosingNote: 'Choosing cards to pass', passedNote: 'Passed ✓',
+      waitingFor: l => `Waiting for ${l}`,
+      claimYou: k => `You take all ${k} remaining tricks`, claimOther: (n, k) => `${n} takes all ${k} remaining tricks`,
+      plusPts: p => `+${p} points`, noMorePts: 'No more points',
+      pressOk: 'Press "OK" to continue', waitConfirm: l => `Waiting for ${l} to confirm`, allYours: 'All tricks are yours',
+      yourTurn: 'Your turn', leadC2: 'Lead the 2♣', yourLead: 'Your lead', tapAgain: 'Tap again to play', turnOf: n => `${n}'s turn`,
+      tieFirst: 'Tied for first!', youWon: 'You won!', wonBy: l => `${l} won`, and: ' and ', handOver: n => `Hand ${n} over`,
+      claimedYou: k => `✋ You took the last ${k} tricks at once, since no one could beat you.`,
+      claimedOther: (n, k) => `✋ ${n} took the last ${k} tricks at once, since no one could beat them.`,
+      moon: n => `🌙 ${n} shot the moon! Everyone else gets 26.`,
+      colPlayer: 'Player', colThis: 'This hand', nextHand: d => `Next hand: ${d === 'no passing' ? d : 'pass ' + d}.`,
+      computer: 'Computer', handN: n => `Hand ${n}`, gotCards: n => `You got 3 cards from ${n}. They're raised in your hand`, gotCardsShort: 'Got 3 cards, raised',
+      passBtn: n => `Pass (${n}/3)`, cont: 'Continue', ok: 'OK',
+      allTakenH: 'All points have been taken', allTakenP: "None of the remaining cards are hearts or the Q♠, so this hand's score won't change.",
+      finishHand: 'End the hand', keepPlaying: 'Keep playing', savedStats: 'This game was saved to your statistics.',
+      newGame: 'New game', stats: 'Statistics', nextHandBtn: 'Next hand',
+      namesH: 'Player names', seatLabels: ['Me', 'On my left', 'Across from me', 'On my right'], needName: 'Every player needs a name.',
+      save: 'Save', defaultNames: 'Default names', cancel: 'Cancel', close: 'Close', back: 'Back',
+      noGames: 'No finished games yet. A game is saved here when someone reaches 100.', importBackup: 'Import backup',
+      tGames: 'Games', tWins: 'Wins', tWinPct: 'Win rate', tBest: 'Best final score', tAvgFinal: 'Average final score',
+      tAvgHand: 'Average points per hand', tZero: 'Hands with no points', tQs: 'Got the Q♠', tMoonMe: 'My moon shots', tMoonOther: 'Moon shots against me',
+      tStreak: 'Current win streak', tBestStreak: 'Longest streak', bySeat: 'By seat', colWins: 'Wins', colAvgFinal: 'Avg. final',
+      recent: 'Recent games', tapGame: 'Tap a game to see its scores.', colDate: 'Date', colWinner: 'Winner', colMyScore: 'My score', colHands: 'Hands',
+      exportBtn: 'Back up to file', deleteAll: 'Delete all', deleteQ: 'Delete all statistics?', deleteP: 'All saved games will be deleted. This cannot be undone.', del: 'Delete',
+      gameFrom: d => `Game from ${d}`, backupH: 'Backup', backupP: "If the download didn't start, copy the text and save it to a file.", copy: 'Copy',
+      importedH: 'Backup loaded', importedP: n => `${n} games added. Games already saved were not duplicated.`, toStats: 'To statistics',
+      importFailH: "Couldn't load the file", importFailP: 'This is not a backup of this game. Choose a file made with "Back up to file".',
+      rulesBtn: 'Rules', rulesH: 'Rules', newGameQ: 'Start a new game?', newGameP: "The current game isn't finished, so it won't be saved to your statistics.",
+      yesNew: 'Yes, new game', noHands: 'No hand has finished yet.', lastTrickH: 'Last trick', scoresH: 'Scores',
+      authFail: m => 'Sign-in failed: ' + m, setupH: 'Firebase needs to be set up',
+      setupP: 'This version uses Firebase Realtime Database to sync the table between devices. Open the file and fill in FIREBASE_CONFIG at the top, following the README.',
+      lobbyP: 'Everyone plays from their own device. Create a table and send the link to your friends.', yourName: 'Your name', roomCode: 'Table code (to join)',
+      joinRoom: 'Join table', createRoom: 'Create a new table', needYourName: 'Enter a name so your friends know who you are.', codeLen: 'A table code is 4 characters.',
+      noRoom: c => `No table found with code ${c}.`, started: 'The game at this table has already started. Ask the host for a new table.', full: 'The table is full.',
+      goneH: 'Table closed', goneP: 'This table no longer exists.', toNewRoom: 'New table', kickedH: 'Your seat was taken', kickedP: 'The host freed your seat at the table.',
+      roomHand: (c, n) => `Table ${c}  Hand ${n}`, hostDecides: 'All points have been taken. The host is deciding whether to end the hand.',
+      host: 'Host', hostGone: 'The host disconnected. The game continues when they return.', offlineDot: ' · offline', waitingPlayer: 'Waiting for a player…', remove: 'Remove', addBot: 'Add computer',
+      seatN: n => `Seat ${n}`, roomN: c => `Table ${c}`, waitP: 'Send your friends the link or the code. Seating goes clockwise by seat number.',
+      allHere: "Everyone's here. You can start.", fillBots: 'You can fill empty seats with computer players.', waitHost: 'Waiting for the host to start the game.',
+      share: 'Share link', startGame: 'Start game', shareText: 'Come play Hearts with me', copyLink: 'Copy the link:',
+      readyList: l => `Ready: ${l}`, nobodyYet: 'nobody yet', waitOthers: 'Waiting for others…', readyBtn: 'Ready for next hand',
+      restart: 'New game at this table', hostCanRestart: 'The host can start a new game.', sendReaction: 'Send a reaction to the table:',
+      offlineToBot: 'Someone disconnected? You can hand their seat to the computer:', toBot: n => `${n} → computer`, codeIs: 'Table code:',
+    },
+  };
+  let lang;
+  try { lang = localStorage.getItem('hearts-lang'); } catch (e) {}
+  if (lang !== 'he' && lang !== 'en') lang = /^he|^iw/i.test(navigator.language || '') ? 'he' : 'en';
+  function apply() {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'he' ? 'rtl' : 'ltr';
+  }
+  function t(k, ...a) { const v = D[lang][k]; return typeof v === 'function' ? v(...a) : v; }
+  function setLang(l) { lang = l; try { localStorage.setItem('hearts-lang', l); } catch (e) {} apply(); }
+  // translate a known default name (computer / default names) into the current language
+  function mapName(n) {
+    const i = lang === 'he' ? 1 : 0, j = 1 - i;
+    const p = NAME_PAIRS.find(x => x[i] === n);
+    return p ? p[j] : n;
+  }
+  const isMeName = n => NAME_PAIRS[0].includes(n);
+  apply();
+  return { t, setLang, mapName, isMeName, get lang() { return lang; }, get dir() { return lang === 'he' ? 'rtl' : 'ltr'; },
+    other: () => (lang === 'he' ? 'en' : 'he'), locale: () => (lang === 'he' ? 'he-IL' : 'en-GB'),
+    defaultNames: () => NAME_PAIRS.slice(0, 4).map(p => p[lang === 'he' ? 0 : 1]),
+    botNames: () => NAME_PAIRS.slice(1, 5).map(p => p[lang === 'he' ? 0 : 1]) };
+})();
+const t = I18N.t;
+
+/* ===== Table UI (shared) ===== */
+const UI = (() => {
+  const { suit, rank, rankTxt, SYM } = Hearts;
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  let H = {}, els = {}, seats = [], handEls = new Map(), trickEls = new Map();
+  let view = null, prevWinnerRel = null, modalKey = null, modalEl = null;
+
+  function cardEl(id) {
+    const s = suit(id), r = rank(id), red = s === 'H' || s === 'D', court = r > 10 && r < 14;
+    const el = document.createElement('div');
+    el.className = 'card ' + (red ? 'red' : 'black') + (court ? ' court' : '');
+    el.dataset.id = id;
+    el.setAttribute('aria-label', rankTxt(r) + ' ' + I18N.t('suits')[s]);
+    const idx = `<b>${rankTxt(r)}</b><i>${SYM[s]}</i>`;
+    el.innerHTML = `<span class="idx">${idx}</span><span class="pip">${court ? `<em>${rankTxt(r)}</em>` : ''}${SYM[s]}</span><span class="idx flip">${idx}</span>`;
+    return el;
+  }
+  const cardHTML = id => cardEl(id).outerHTML;
+
+  function mount(handlers) {
+    H = handlers;
+    document.body.innerHTML = `
+    <div id="app">
+      <header class="bar">
+        <h1><span id="ttl"></span> <span>♥</span></h1>
+        <span class="sub" id="sub"></span>
+        <button class="ibtn" id="bScores"></button>
+        <button class="ibtn" id="bLast"></button>
+        <button class="ibtn" id="bMenu">☰</button>
+      </header>
+      <main class="table" style="direction:ltr">
+        ${[2, 1, 3, 0].map(r => `<div class="seat" data-rel="${r}"></div>`).join('')}
+        <div class="mid"><div class="trick" id="trick"></div><div class="status" id="status"></div></div>
+        <div class="handzone"><div class="hand" id="hand"></div><div class="actions" id="actions"></div></div>
+      </main>
+    </div>`;
+    els = { sub: q('#sub'), trick: q('#trick'), status: q('#status'), hand: q('#hand'), actions: q('#actions') };
+    seats = [0, 1, 2, 3].map(r => q(`.seat[data-rel="${r}"]`));
+    seats.forEach((el, r) => {
+      el.innerHTML = `${r ? '<div class="stack"><div class="back"></div><div class="back"></div><div class="back"></div><div class="n"></div></div>' : ''}
+        <div class="plate"><div class="av"></div><div class="who"><b></b><small></small></div><div class="score"></div></div>
+        <div class="tags"></div>`;
+    });
+    q('.mid').onclick = () => H.table && H.table();
+    q('#bScores').onclick = () => H.scores && H.scores();
+    q('#bLast').onclick = () => H.last && H.last();
+    q('#bMenu').onclick = () => H.menu && H.menu();
+    window.addEventListener('resize', () => { layoutHand(); placeTrick(); });
+    applyLang();
+  }
+  let titleKey = 'title';
+  function applyLang(key) {
+    if (key) titleKey = key;
+    document.title = t(titleKey);
+    q('#ttl').textContent = t(titleKey);
+    q('#bScores').textContent = I18N.t('btnScores');
+    q('#bLast').textContent = I18N.t('btnLast');
+    q('#bMenu').setAttribute('aria-label', I18N.t('menu'));
+    [els.status, q('.handzone'), ...seats].forEach(e => e.setAttribute('dir', I18N.dir));
+    for (const [id, el] of handEls) el.setAttribute('aria-label', rankTxt(rank(id)) + ' ' + I18N.t('suits')[suit(id)]);
+  }
+  function q(s) { return document.querySelector(s); }
+  const relOf = s => (s - view.mySeat + 4) % 4;
+
+  function render(v) {
+    view = v;
+    els.sub.textContent = v.sub || '';
+    // seats
+    for (let s = 0; s < 4; s++) {
+      const p = v.players[s] || {}, el = seats[relOf(s)];
+      el.classList.toggle('turn', v.turn === s);
+      el.classList.toggle('offline', p.online === false && !p.bot);
+      el.querySelector('.av').textContent = p.bot ? '🤖' : (p.name || '?').trim().charAt(0);
+      el.querySelector('.who b').textContent = p.name || I18N.t('emptySeat');
+      el.querySelector('.who small').textContent = p.note || '';
+      el.querySelector('.score').textContent = v.scores ? v.scores[s] : '';
+      const tags = [];
+      if (v.taken && v.taken[s]) tags.push(`<span class="tag pts">♥ ${v.taken[s]}</span>`);
+      if (v.phase === 'passing' && v.passDone && v.passDone[s]) tags.push(`<span class="tag ok">${I18N.t('tagPassed')}</span>`);
+      if (p.online === false && !p.bot) tags.push(`<span class="tag off">${I18N.t('tagOffline')}</span>`);
+      el.querySelector('.tags').innerHTML = tags.join('');
+      const st = el.querySelector('.stack');
+      if (st) {
+        const n = v.counts ? v.counts[s] : 0;
+        st.style.visibility = n ? 'visible' : 'hidden';
+        st.querySelector('.n').textContent = n || '';
+      }
+    }
+    renderTrick();
+    // status
+    els.trick.classList.toggle('busy', (v.trick || []).length > 0);
+    els.status.innerHTML = v.status || '';
+    renderHand();
+    // actions
+    els.actions.innerHTML = '';
+    (v.actions || []).forEach(a => {
+      const b = document.createElement('button');
+      b.className = 'btn' + (a.ghost ? ' ghost' : '');
+      b.textContent = a.label; b.disabled = !!a.disabled;
+      b.onclick = () => H.action && H.action(a.key);
+      els.actions.appendChild(b);
+    });
+  }
+
+  function trickGeom(rel, mode) {
+    const R = els.trick.clientWidth || 200;
+    const near = [[0, .19], [-.25, 0], [0, -.19], [.25, 0]][rel];
+    const far = [[0, 1], [-1, 0], [0, -1], [1, 0]][rel];
+    const rot = [-3, 9, 4, -8][rel];
+    if (mode === 'in') return `translate(${near[0] * R}px,${near[1] * R}px) rotate(${rot}deg)`;
+    if (mode === 'from') return `translate(${far[0] * R}px,${far[1] * R}px) rotate(${rot}deg) scale(.9)`;
+    return `translate(${far[0] * R * 1.3}px,${far[1] * R * 1.3}px) rotate(${rot}deg) scale(.5)`;
+  }
+  function renderTrick() {
+    const t = view.trick || [];
+    const ids = new Set(t.map(x => x.card));
+    const winRel = view.trickWinner != null ? relOf(view.trickWinner) : null;
+    if (winRel != null) prevWinnerRel = winRel;
+    for (const [id, el] of trickEls) {
+      if (!ids.has(id)) {
+        trickEls.delete(id);
+        el.classList.remove('win');
+        if (prevWinnerRel != null) {
+          el.style.transform = trickGeom(prevWinnerRel, 'out'); el.style.opacity = '0';
+          setTimeout(() => el.remove(), 420);
+        } else el.remove();
+      }
+    }
+    t.forEach((x, i) => {
+      let el = trickEls.get(x.card);
+      const rel = relOf(x.seat);
+      if (!el) {
+        el = cardEl(x.card); el.classList.add('tcard'); el.dataset.rel = rel;
+        el.style.transform = trickGeom(rel, 'from'); el.style.opacity = '0';
+        els.trick.appendChild(el); trickEls.set(x.card, el);
+        el.getBoundingClientRect();
+        el.style.opacity = '1'; el.style.transform = trickGeom(rel, 'in');
+      }
+      el.style.zIndex = i + 1;
+      el.classList.toggle('win', view.trickWinner === x.seat);
+    });
+    if (!t.length) prevWinnerRel = winRel;
+  }
+  function placeTrick() {
+    for (const el of trickEls.values()) el.style.transform = trickGeom(+el.dataset.rel, 'in');
+  }
+
+  function renderHand() {
+    const ids = view.hand || [];
+    const set = new Set(ids);
+    for (const [id, el] of handEls) if (!set.has(id)) { el.remove(); handEls.delete(id); }
+    const legal = view.legal ? new Set(view.legal) : null;
+    const sel = new Set(view.selected || []);
+    const rec = new Set(view.received || []);
+    const got = new Set(view.raised || []);
+    els.hand.classList.toggle('can', !!view.interactive);
+    ids.forEach((id, i) => {
+      let el = handEls.get(id);
+      if (!el) {
+        el = cardEl(id); el.tabIndex = 0; el.setAttribute('role', 'button');
+        el.onclick = () => H.card && H.card(id);
+        el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); H.card && H.card(id); } };
+        els.hand.appendChild(el); handEls.set(id, el);
+      }
+      el.style.zIndex = i + 1;
+      el.dataset.i = i;
+      el.classList.toggle('dim', !!legal && !legal.has(id));
+      el.classList.toggle('sel', sel.has(id));
+      el.classList.toggle('new', rec.has(id));
+      el.classList.toggle('got', got.has(id));
+    });
+    // keep DOM order = hand order for keyboard
+    ids.forEach(id => els.hand.appendChild(handEls.get(id)));
+    layoutHand();
+  }
+  function layoutHand() {
+    const ids = view ? (view.hand || []) : [];
+    if (!ids.length) return;
+    const W = els.hand.clientWidth;
+    const cw = handEls.get(ids[0]).offsetWidth || 60;
+    const n = ids.length;
+    const step = n > 1 ? Math.min(cw * 0.74, (W - cw) / (n - 1)) : 0;
+    const start = (W - (cw + step * (n - 1))) / 2;
+    ids.forEach((id, i) => { handEls.get(id).style.left = (start + i * step) + 'px'; });
+  }
+
+  function modal(key, html, buttons = []) {
+    if (!modalEl) {
+      modalEl = document.createElement('div'); modalEl.className = 'scrim';
+      modalEl.innerHTML = '<div class="sheet" role="dialog" aria-modal="true"></div>';
+      modalEl.addEventListener('click', e => { if (e.target === modalEl && modalEl.dataset.dismiss) closeModal(); });
+      document.body.appendChild(modalEl);
+    }
+    modalKey = key;
+    modalEl.dir = I18N.dir;
+    modalEl.dataset.dismiss = buttons.some(b => b.close) ? '1' : '';
+    const sheet = modalEl.firstChild;
+    sheet.innerHTML = html + (buttons.length ? '<div class="row"></div>' : '');
+    const row = sheet.querySelector('.row');
+    buttons.forEach(b => {
+      const el = document.createElement('button');
+      el.className = 'btn' + (b.ghost ? ' ghost' : ''); el.textContent = b.label; el.disabled = !!b.disabled;
+      el.onclick = () => { if (b.close) closeModal(); b.onClick && b.onClick(); };
+      row.appendChild(el);
+    });
+    return sheet;
+  }
+  function closeModal(key) {
+    if (!modalEl || (key && key !== modalKey)) return;
+    modalEl.remove(); modalEl = null; modalKey = null;
+  }
+  const currentModal = () => modalKey;
+
+  function bubble(seat, emoji) {
+    if (!view) return;
+    const el = seats[relOf(seat)];
+    const b = document.createElement('div'); b.className = 'bubble'; b.textContent = emoji;
+    el.appendChild(b); setTimeout(() => b.remove(), 2500);
+  }
+
+  function scoreTable(names, history, scores, mySeat) {
+    const min = Math.min(...scores);
+    const head = names.map((n, i) => `<th>${esc(n)}${i === mySeat && !I18N.isMeName(n) ? I18N.t('me') : ''}</th>`).join('');
+    const rows = history.map((h, k) => `<tr><td class="n">${k + 1}</td>${h.map(x => `<td>${x}</td>`).join('')}</tr>`).join('');
+    return `<div class="tbl-wrap"><table class="sc"><thead><tr><th>${I18N.t('colHand')}</th>${head}</tr></thead><tbody>${rows}
+      <tr class="tot"><td class="n">${I18N.t('colTotal')}</td>${scores.map(x => `<td class="${x === min ? 'best' : ''}">${x}</td>`).join('')}</tr></tbody></table></div>`;
+  }
+  function trickHTML(lastTrick, names) {
+    if (!lastTrick) return `<p>${I18N.t('noTrick')}</p>`;
+    return `<div class="minitrick">${lastTrick.cards.map(t => `<figure class="${t.seat === lastTrick.winner ? 'w' : ''}">${cardHTML(t.card)}<figcaption>${esc(names[t.seat])}</figcaption></figure>`).join('')}</div>
+      <p>${I18N.t('tookTrick', esc(names[lastTrick.winner]))}</p>`;
+  }
+
+
+  return { mount, render, modal, closeModal, currentModal, bubble, cardHTML, scoreTable, trickHTML, esc, applyLang };
+})();
+
+/* ===== helpers shared by both apps ===== */
+const Common = (() => {
+  const ARROWS = { 1: '←', 2: '↑', 3: '→' };
+  function statusFor(st, mySeat, names, extra = {}) {
+    const rel = s => (s - mySeat + 4) % 4;
+    if (st.phase === 'passing') {
+      const tg = Hearts.passTarget(mySeat, st.passDir);
+      if (!st.passDone[mySeat]) return { center: `<span class="arrow">${ARROWS[rel(tg)]}</span>${I18N.t('choosePass', UI.esc(names[tg]))}`, mine: I18N.t('choosingNote') };
+      const wait = [0, 1, 2, 3].filter(s => !st.passDone[s]).map(s => names[s]);
+      return { center: `<span class="arrow">${ARROWS[rel(tg)]}</span>${I18N.t('waitingFor', UI.esc(wait.join(', ')))}`, mine: I18N.t('passedNote') };
+    }
+    if (st.phase === 'playing' && st.claiming != null) {
+      const left = 13 - st.tricksPlayed, pts = (st.claimPts != null ? st.claimPts : null);
+      const msg = (st.claiming === mySeat ? I18N.t('claimYou', left) : I18N.t('claimOther', UI.esc(names[st.claiming]), left)) +
+        (pts != null ? `<br><small>${pts ? I18N.t('plusPts', pts) : I18N.t('noMorePts')}</small>` : '');
+      const cards = (st.claimCards || []).map(UI.cardHTML).join('');
+      const ack = st.claimAck || [];
+      const wait = [0, 1, 2, 3].filter(s => !ack[s] && s !== mySeat).map(s => UI.esc(names[s]));
+      const foot = !ack[mySeat] ? I18N.t('pressOk') : (wait.length ? I18N.t('waitConfirm', wait.join(', ')) : '');
+      return { center: `<div class="claim"><div>${msg}</div>${cards ? `<div class="claim-cards">${cards}</div>` : ''}${foot ? `<small class="claim-foot">${foot}</small>` : ''}</div>`, mine: st.claiming === mySeat ? I18N.t('allYours') : '' };
+    }
+    if (st.phase === 'playing') {
+      if (st.turn === mySeat) {
+        let c = I18N.t(st.trick.length ? 'yourTurn' : (st.tricksPlayed === 0 ? 'leadC2' : 'yourLead'));
+        if (extra.armed) c = I18N.t('tapAgain');
+        return { center: c, mine: c };
+      }
+      return { center: I18N.t('turnOf', UI.esc(names[st.turn])), mine: '' };
+    }
+    if (st.phase === 'trickEnd') return { center: '', mine: '' };
+    return { center: '', mine: '' };
+  }
+  function handEndHTML(st, names, mySeat) {
+    const isOver = st.phase === 'gameOver';
+    let title;
+    if (isOver) {
+      const w = st.winners || [];
+      title = w.includes(mySeat) ? I18N.t(w.length > 1 ? 'tieFirst' : 'youWon') : I18N.t('wonBy', w.map(i => names[i]).join(I18N.t('and')));
+    } else title = I18N.t('handOver', st.handNum + 1);
+    const cl = st.claimed && st.claimed.seat != null
+      ? `<p>${st.claimed.seat === mySeat ? I18N.t('claimedYou', st.claimed.tricks) : I18N.t('claimedOther', UI.esc(names[st.claimed.seat]), st.claimed.tricks)}</p>` : '';
+    const moon = st.moon != null ? `<p>${I18N.t('moon', UI.esc(names[st.moon]))}</p>` : '';
+    const min = Math.min(...st.scores);
+    const rows = [0, 1, 2, 3].map(s => `<tr><td class="n">${UI.esc(names[s])}${s === mySeat && !I18N.isMeName(names[s]) ? I18N.t('me') : ''}</td><td dir="ltr">+${st.handDelta[s]}</td><td class="${st.scores[s] === min ? 'best' : ''}" style="font-family:var(--serif);font-weight:700">${st.scores[s]}</td></tr>`).join('');
+    return `<h2>${UI.esc(title)}</h2>${cl}${moon}
+      <div class="tbl-wrap"><table class="sc"><thead><tr><th style="text-align:start">${I18N.t('colPlayer')}</th><th>${I18N.t('colThis')}</th><th>${I18N.t('colTotal')}</th></tr></thead><tbody>${rows}</tbody></table></div>
+      ${isOver ? '' : `<p>${I18N.t('nextHand', I18N.t('dirs')[(st.handNum + 1) % 4])}</p>`}`;
+  }
+  return { statusFor, handEndHTML };
+})();
+
+/* ===== Version 1: you vs three computer players ===== */
+(() => {
+  const KEY = 'hearts-solo-v1', NAMES_KEY = 'hearts-solo-names', ARCH_KEY = 'hearts-solo-archive';
+  const SPEED = { bot: 700, trick: 4300 };
+  let g = null, sel = new Set(), armed = null, timer = null;
+
+  const lsGet = (k, d) => { try { const s = localStorage.getItem(k); return s ? JSON.parse(s) : d; } catch (e) { return d; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } };
+  const save = () => lsSet(KEY, g);
+  const namesKey = () => NAMES_KEY + '-' + I18N.lang;
+  const names = () => {
+    let n = lsGet(namesKey(), null);
+    if (!n && I18N.lang === 'he') n = lsGet(NAMES_KEY, null); // names saved before languages existed
+    return Array.isArray(n) && n.length === 4 ? n : I18N.defaultNames();
+  };
+  const t = I18N.t;
+  const archive = () => lsGet(ARCH_KEY, []);
+  const esc = UI.esc;
+
+  function newGame() {
+    UI.closeModal();
+    g = Hearts.newGame(names()); g.started = Date.now(); g.handInfo = [];
+    Hearts.startHand(g); sel.clear(); armed = null; step();
+  }
+  function step() {
+    if (g.phase === 'passing') for (let s = 1; s < 4; s++) if (!g.passDone[s]) Hearts.setPass(g, s, Bot.choosePass(g.hands[s]));
+    if (g.phase === 'gameOver' && !g.archived) archiveGame();
+    save(); draw(); schedule();
+  }
+  function archiveGame() {
+    const list = archive();
+    list.push({
+      id: g.started || Date.now(), date: Date.now(), names: g.names.slice(), scores: g.scores.slice(),
+      history: g.history.map(h => h.slice()), winners: g.winners.slice(), handInfo: (g.handInfo || []).slice(),
+    });
+    g.archived = true;
+    if (!lsSet(ARCH_KEY, list)) { list.splice(0, Math.floor(list.length / 4)); lsSet(ARCH_KEY, list); }
+  }
+  function schedule() {
+    clearTimeout(timer);
+    if (g.passReveal) return;
+    else if (g.phase === 'trickEnd') timer = setTimeout(collect, SPEED.trick);
+    else if (g.claiming != null) { /* waiting for your confirmation */ }
+    else if (Hearts.claimant(g) >= 0) { Hearts.startClaim(g, s => s !== 0); step(); }
+    else if (Hearts.canFinish(g) && !g.playOut) askFinish();
+    else if (g.phase === 'playing' && g.turn !== 0)
+      timer = setTimeout(() => { Hearts.playCard(g, g.turn, Bot.choosePlay(g, g.turn)); step(); }, SPEED.bot);
+    else if (g.phase === 'handEnd' || g.phase === 'gameOver') timer = setTimeout(showHandEnd, 500);
+  }
+  function collect() { clearTimeout(timer); if (Hearts.collectTrick(g)) step(); }
+  function askFinish() {
+    UI.modal('finish', `<h2>${t('allTakenH')}</h2><p>${t('allTakenP')}</p>`, [
+      { label: t('finishHand'), onClick: () => { UI.closeModal(); Hearts.finishHand(g); step(); } },
+      { label: t('keepPlaying'), ghost: true, onClick: () => { UI.closeModal(); g.playOut = true; step(); } }]);
+  }
+  function draw() {
+    const N = g.names;
+    const myTurn = g.phase === 'playing' && g.turn === 0;
+    const passing = g.phase === 'passing' && !g.passDone[0];
+    if (g.claiming != null) {
+      g.claimPts = g.hands.flat().reduce((a, c) => a + Hearts.pts(c), 0);
+      g.claimCards = Hearts.sortHand(g.hands[g.claiming]);
+    }
+    const st = Common.statusFor(g, 0, N, { armed: myTurn && armed });
+    UI.render({
+      mySeat: 0, sub: t('handN', g.handNum + 1),
+      players: N.map((n, s) => ({ name: n, bot: s > 0, note: s === 0 ? st.mine : t('computer') })),
+      scores: g.scores, taken: g.taken, counts: g.hands.map(h => h.length),
+      phase: g.phase, turn: g.turn, passDone: g.passDone,
+      trick: g.trick, trickWinner: g.trickWinner,
+      hand: g.hands[0], raised: g.passReveal ? g.received[0] : [], legal: myTurn ? Hearts.legalFor(g, 0) : null,
+      selected: passing ? [...sel] : (armed ? [armed] : []),
+      received: g.tricksPlayed === 0 ? g.received[0] : [],
+      interactive: passing || myTurn,
+      status: g.passReveal ? t('gotCards', esc(N[[3, 1, 2, 0][g.passDir]])) : (g.trick.length ? '' : st.center),
+      actions: passing ? [{ key: 'pass', label: t('passBtn', sel.size), disabled: sel.size !== 3 }]
+        : g.passReveal ? [{ key: 'revealOk', label: t('cont') }]
+        : g.claiming != null && g.claimAck && !g.claimAck[0] ? [{ key: 'claimOk', label: t('ok') }] : [],
+    });
+  }
+  function onCard(id) {
+    if (g.phase === 'passing' && !g.passDone[0]) {
+      if (sel.has(id)) sel.delete(id); else if (sel.size < 3) sel.add(id);
+      return draw();
+    }
+    if (g.phase === 'playing' && g.turn === 0 && Hearts.legalFor(g, 0).includes(id)) {
+      if (armed === id) { armed = null; Hearts.playCard(g, 0, id); step(); }
+      else { armed = id; draw(); }
+    }
+  }
+  function onAction(k) {
+    if (k === 'pass' && sel.size === 3) {
+      Hearts.setPass(g, 0, [...sel]); sel.clear();
+      if (g.phase === 'playing') g.passReveal = true;
+      step();
+    }
+    if (k === 'revealOk') { g.passReveal = false; step(); }
+    if (k === 'claimOk') { Hearts.ackClaim(g, 0); step(); }
+  }
+  function showHandEnd() {
+    if (g.phase === 'gameOver') {
+      UI.modal('end', Common.handEndHTML(g, g.names, 0) + UI.scoreTable(g.names, g.history, g.scores, 0) +
+        `<p>${t('savedStats')}</p>`,
+        [{ label: t('newGame'), onClick: newGame }, { label: t('stats'), ghost: true, onClick: showStats }]);
+    } else if (g.phase === 'handEnd') {
+      UI.modal('end', Common.handEndHTML(g, g.names, 0), [{ label: t('nextHandBtn'), onClick: () => {
+        UI.closeModal(); for (let s = 0; s < 4; s++) Hearts.setReady(g, s); step(); } }]);
+    }
+  }
+
+  /* ---------- names ---------- */
+  function editNames() {
+    const cur = g.names;
+    const labels = t('seatLabels');
+    const sheet = UI.modal('names', `<h2>${t('namesH')}</h2>
+      ${cur.map((n, i) => `<div class="field"><label for="pn${i}">${labels[i]}</label><input id="pn${i}" maxlength="12" value="${esc(n)}"></div>`).join('')}
+      <div class="err" id="nerr"></div>`, [
+      { label: t('save'), onClick: () => {
+        const v = [0, 1, 2, 3].map(i => sheet.querySelector('#pn' + i).value.trim());
+        if (v.some(x => !x)) { sheet.querySelector('#nerr').textContent = t('needName'); return; }
+        lsSet(namesKey(), v); g.names = v; save(); UI.closeModal(); draw();
+      } },
+      { label: t('defaultNames'), ghost: true, onClick: () => I18N.defaultNames().forEach((n, i) => { sheet.querySelector('#pn' + i).value = n; }) },
+      { label: t('cancel'), ghost: true, close: true }]);
+  }
+
+  /* ---------- statistics ---------- */
+  function stats(list) {
+    const S = { games: list.length, wins: 0, ties: 0, finals: [], hands: 0, myPts: 0, moonMe: 0, moonOther: 0,
+      qsMe: 0, qsHands: 0, zeroHands: 0, seat: [0, 1, 2, 3].map(() => ({ wins: 0, total: 0 })), streak: 0, bestStreak: 0 };
+    let run = 0;
+    list.forEach(a => {
+      const won = a.winners.includes(0);
+      if (won) { S.wins++; if (a.winners.length > 1) S.ties++; }
+      run = won ? run + 1 : 0; S.bestStreak = Math.max(S.bestStreak, run);
+      S.finals.push(a.scores[0]);
+      a.history.forEach(h => { S.hands++; S.myPts += h[0]; if (h[0] === 0) S.zeroHands++; });
+      (a.handInfo || []).forEach(x => {
+        if (x.moon === 0) S.moonMe++; else if (x.moon != null) S.moonOther++;
+        if (x.qs != null) { S.qsHands++; if (x.qs === 0) S.qsMe++; }
+      });
+      a.winners.forEach(w => S.seat[w].wins++);
+      a.scores.forEach((x, i) => { S.seat[i].total += x; });
+    });
+    S.streak = run;
+    return S;
+  }
+  const pct = (a, b) => (b ? Math.round(100 * a / b) + '%' : '—');
+  const avg = (a, b) => (b ? (a / b).toFixed(1) : '—');
+  const fmtDate = d => new Date(d).toLocaleDateString(I18N.locale(), { day: 'numeric', month: 'numeric', year: '2-digit' }) +
+    ' ' + new Date(d).toLocaleTimeString(I18N.locale(), { hour: '2-digit', minute: '2-digit' });
+  const aNames = a => a.names.map(I18N.mapName);
+
+  function showStats() {
+    const list = archive();
+    if (!list.length) {
+      return UI.modal('stats', `<h2>${t('stats')}</h2><p>${t('noGames')}</p>`,
+        [{ label: t('importBackup'), ghost: true, onClick: importData }, { label: t('close'), close: true }]);
+    }
+    const S = stats(list);
+    const N = names();
+    const tile = (v, l) => `<div class="stat"><b>${v}</b><span>${l}</span></div>`;
+    const recent = list.slice().reverse().slice(0, 30).map((a, k) => {
+      const i = list.length - 1 - k;
+      const won = a.winners.includes(0);
+      return `<tr data-g="${i}" class="clk"><td class="n">${fmtDate(a.date)}</td><td>${won ? '🏆' : esc(a.winners.map(w => aNames(a)[w]).join(', '))}</td><td>${a.scores[0]}</td><td>${a.history.length}</td></tr>`;
+    }).join('');
+    const sheet = UI.modal('stats', `<h2>${t('stats')}</h2>
+      <div class="stats">
+        ${tile(S.games, t('tGames'))}${tile(S.wins, t('tWins'))}${tile(pct(S.wins, S.games), t('tWinPct'))}
+        ${tile(Math.min(...S.finals), t('tBest'))}${tile(avg(S.finals.reduce((a, b) => a + b, 0), S.games), t('tAvgFinal'))}${tile(avg(S.myPts, S.hands), t('tAvgHand'))}
+        ${tile(pct(S.zeroHands, S.hands), t('tZero'))}${tile(pct(S.qsMe, S.qsHands), t('tQs'))}${tile(S.moonMe, t('tMoonMe'))}
+        ${tile(S.moonOther, t('tMoonOther'))}${tile(S.streak, t('tStreak'))}${tile(S.bestStreak, t('tBestStreak'))}
+      </div>
+      <h3>${t('bySeat')}</h3>
+      <div class="tbl-wrap"><table class="sc"><thead><tr><th style="text-align:start">${t('colPlayer')}</th><th>${t('colWins')}</th><th>${t('colAvgFinal')}</th></tr></thead><tbody>
+        ${S.seat.map((x, i) => `<tr><td class="n">${esc(N[i])}</td><td>${x.wins}</td><td>${avg(x.total, S.games)}</td></tr>`).join('')}
+      </tbody></table></div>
+      <h3>${t('recent')}</h3><p>${t('tapGame')}</p>
+      <div class="tbl-wrap"><table class="sc"><thead><tr><th style="text-align:start">${t('colDate')}</th><th>${t('colWinner')}</th><th>${t('colMyScore')}</th><th>${t('colHands')}</th></tr></thead><tbody>${recent}</tbody></table></div>`,
+      [{ label: t('exportBtn'), ghost: true, onClick: exportData },
+       { label: t('importBackup'), ghost: true, onClick: importData },
+       { label: t('deleteAll'), ghost: true, onClick: () => UI.modal('confirm', `<h2>${t('deleteQ')}</h2><p>${t('deleteP')}</p>`,
+          [{ label: t('del'), onClick: () => { lsSet(ARCH_KEY, []); showStats(); } }, { label: t('cancel'), ghost: true, onClick: showStats }]) },
+       { label: t('close'), close: true }]);
+    sheet.querySelectorAll('tr[data-g]').forEach(tr => tr.onclick = () => {
+      const a = list[+tr.dataset.g];
+      UI.modal('game', `<h2>${t('gameFrom', fmtDate(a.date))}</h2>` + UI.scoreTable(aNames(a), a.history, a.scores, 0),
+        [{ label: t('back'), onClick: showStats }, { label: t('close'), ghost: true, close: true }]);
+    });
+  }
+  function exportData() {
+    const data = JSON.stringify({ app: 'hearts-solo', version: 1, names: names(), archive: archive() });
+    const name = 'hearts-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    try {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
+      a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    } catch (e) {}
+    UI.modal('export', `<h2>${t('backupH')}</h2><p>${t('backupP')}</p>
+      <div class="field"><textarea readonly rows="5" dir="ltr" style="font:12px monospace;border-radius:12px;padding:8px;width:100%" onclick="this.select()">${esc(data)}</textarea></div>`,
+      [{ label: t('copy'), ghost: true, onClick: () => { navigator.clipboard && navigator.clipboard.writeText(data); } },
+       { label: t('back'), onClick: showStats }]);
+  }
+  function importData() {
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json,application/json';
+    inp.onchange = async () => {
+      try {
+        const d = JSON.parse(await inp.files[0].text());
+        if (d.app !== 'hearts-solo' || !Array.isArray(d.archive)) throw 0;
+        const cur = archive(), ids = new Set(cur.map(a => a.id));
+        const add = d.archive.filter(a => a && Array.isArray(a.scores) && !ids.has(a.id));
+        lsSet(ARCH_KEY, cur.concat(add).sort((a, b) => a.date - b.date));
+        UI.modal('imp', `<h2>${t('importedH')}</h2><p>${t('importedP', add.length)}</p>`, [{ label: t('toStats'), onClick: showStats }]);
+      } catch (e) {
+        UI.modal('imp', `<h2>${t('importFailH')}</h2><p>${t('importFailP')}</p>`, [{ label: t('close'), close: true }]);
+      }
+    };
+    inp.click();
+  }
+
+  function menu() {
+    UI.modal('menu', `<h2>${t('menu')}</h2>`, [
+      { label: '🌐 ' + t('langBtn'), ghost: true, onClick: switchLang },
+      { label: t('stats'), ghost: true, onClick: showStats },
+      { label: t('namesH'), ghost: true, onClick: editNames },
+      { label: t('rulesBtn'), ghost: true, onClick: () => UI.modal('rules', `<h2>${t('rulesH')}</h2>` + t('rules'), [{ label: t('close'), close: true }]) },
+      { label: t('newGame'), ghost: true, onClick: () => UI.modal('confirm', `<h2>${t('newGameQ')}</h2><p>${t('newGameP')}</p>`,
+          [{ label: t('yesNew'), onClick: newGame }, { label: t('cancel'), ghost: true, close: true }]) },
+      { label: t('close'), close: true },
+    ]);
+  }
+  function switchLang() {
+    UI.closeModal();
+    I18N.setLang(I18N.other());
+    g.names = names(); save();
+    UI.applyLang(); draw();
+    if (g.phase === 'handEnd' || g.phase === 'gameOver') showHandEnd();
+    else if (Hearts.canFinish(g) && !g.playOut) askFinish();
+  }
+  UI.mount({
+    card: onCard, action: onAction, menu,
+    table: () => { if (g.phase === 'trickEnd') collect(); },
+    scores: () => UI.modal('scores', `<h2>${t('scoresH')}</h2>` + (g.history.length ? UI.scoreTable(g.names, g.history, g.scores, 0) : `<p>${t('noHands')}</p>`), [{ label: t('close'), close: true }]),
+    last: () => UI.modal('last', `<h2>${t('lastTrickH')}</h2>` + UI.trickHTML(g.lastTrick, g.names), [{ label: t('close'), close: true }]),
+  });
+  const saved = lsGet(KEY, null);
+  if (saved && saved.hands && saved.phase !== 'lobby') {
+    g = saved; if (!g.names) g.names = names();
+    if (g.claiming != null && !g.claimAck) g.claimAck = [false, true, true, true];
+    step();
+  } else newGame();
+})();
+
+</script>
+</body>
+</html>
