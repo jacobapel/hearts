@@ -288,7 +288,7 @@ const Hearts = (() => {
     g.taken = four(0); g.played = [];
     g.heartsBroken = false; g.tricksPlayed = 0;
     g.ready = four(false); g.moon = null; g.handDelta = null; g.winners = null;
-    g.turn = -1; g.leader = -1; g.playOut = false; g.qsBy = null; g.claiming = null; g.claimed = null; g.claimAck = four(false);
+    g.turn = -1; g.leader = -1; g.playOut = false; g.qsBy = null; g.claiming = null; g.claimType = null; g.claimed = null; g.claimAck = four(false);
     if (g.passDir === 3) beginPlay(g); else g.phase = 'passing';
   }
   function setPass(g, seat, cards) {
@@ -375,14 +375,52 @@ const Hearts = (() => {
     };
     return turn === p ? legal.some(tryCard) : legal.every(tryCard);
   }
-  let claimMemo = { key: '', val: -1 };
+  // true if seat p can make sure it takes every trick that holds points, whatever the others play
+  function takesAllPoints(hands, trick, turn, hb, p, memo) {
+    const key = hands.join('|') + '#' + trick.map(x => x.seat + x.card).join(',') + '#' + turn + (hb ? 1 : 0);
+    if (memo.has(key)) return memo.get(key);
+    const legal = legalPlays(hands[turn], trick, hb, false);
+    const tryCard = c => {
+      const h = hands.slice(); h[turn] = hands[turn].filter(x => x !== c);
+      const tr = trick.concat([{ seat: turn, card: c }]);
+      const nhb = hb || suit(c) === 'H';
+      if (tr.length < 4) return takesAllPoints(h, tr, (turn + 1) % 4, nhb, p, memo);
+      const w = trickWinner(tr);
+      if (w !== p && tr.some(x => pts(x.card) > 0)) return false;
+      if (h.every(x => !x.some(c2 => pts(c2) > 0))) return true; // no points left anywhere
+      return takesAllPoints(h, [], w, nhb, p, memo);
+    };
+    const r = turn === p ? legal.some(tryCard) : legal.every(tryCard);
+    memo.set(key, r);
+    return r;
+  }
+  // Seat that has taken every point so far and is sure to take all the remaining points too (a certain moon), or -1.
+  function moonClaimant(g) {
+    const left = g.hands.flat().reduce((a, c) => a + pts(c), 0);
+    if (!left) return -1;
+    for (let p = 0; p < 4; p++) {
+      if ([0, 1, 2, 3].some(o => o !== p && g.taken[o] > 0)) continue;
+      const oppPts = [0, 1, 2, 3].some(o => o !== p && g.hands[o].some(c => pts(c) > 0));
+      // quick rule: p leads now, nobody else holds points, the Q♠ is gone and p may lead hearts
+      if (!oppPts && g.turn === p && !g.hands[p].includes('S12') &&
+          (g.heartsBroken || g.hands[p].every(c => suit(c) === 'H'))) {
+        const othersHaveHearts = [0, 1, 2, 3].some(o => o !== p && g.hands[o].some(c => suit(c) === 'H'));
+        if (!othersHaveHearts) return p;
+      }
+      if (g.hands[p].length <= 5 && takesAllPoints(g.hands, [], g.turn, g.heartsBroken, p, new Map())) return p;
+    }
+    return -1;
+  }
+  let claimMemo = { key: '', val: -1, kind: null };
   function claimant(g) {
     if (g.phase !== 'playing' || g.trick.length || g.tricksPlayed < 1 || g.tricksPlayed > 11 || g.claiming != null) return -1;
-    const key = JSON.stringify([g.hands, g.turn, g.heartsBroken]);
+    const key = JSON.stringify([g.hands, g.turn, g.heartsBroken, g.taken]);
     if (claimMemo.key === key) return claimMemo.val;
     const v = quickClaim(g);
-    const r = v >= 0 ? v : (g.hands[g.turn].length <= 4 ? [0, 1, 2, 3].find(p => winsAll(g.hands, [], g.turn, g.heartsBroken, p)) : undefined);
-    claimMemo = { key, val: r == null ? -1 : r };
+    let r = v >= 0 ? v : (g.hands[g.turn].length <= 4 ? [0, 1, 2, 3].find(p => winsAll(g.hands, [], g.turn, g.heartsBroken, p)) : undefined);
+    let kind = 'tricks';
+    if (r == null) { const m = moonClaimant(g); if (m >= 0) { r = m; kind = 'moon'; } }
+    claimMemo = { key, val: r == null ? -1 : r, kind };
     return claimMemo.val;
   }
   // fast check: the leader holds enough top cards in every suit
@@ -404,12 +442,12 @@ const Hearts = (() => {
     if (g.phase !== 'playing' || w == null) return false;
     const rest = g.hands.flat();
     const p = rest.reduce((a, c) => a + pts(c), 0);
-    g.claimed = { seat: w, tricks: 13 - g.tricksPlayed, pts: p };
+    g.claimed = { seat: w, tricks: 13 - g.tricksPlayed, pts: p, kind: g.claimType || 'tricks' };
     g.taken[w] += p;
     if (rest.includes('S12')) g.qsBy = w;
     g.played.push(...rest);
     g.hands = g.hands.map(() => []);
-    g.tricksPlayed = 13; g.claiming = null;
+    g.tricksPlayed = 13; g.claiming = null; g.claimType = null;
     endHand(g);
     return true;
   }
@@ -418,6 +456,7 @@ const Hearts = (() => {
     const w = claimant(g);
     if (w < 0) return false;
     g.claiming = w;
+    g.claimType = claimMemo.kind || 'tricks';
     g.claimAck = [0, 1, 2, 3].map(s => !!isBot(s));
     if (g.claimAck.every(Boolean)) claimAll(g);
     return true;
@@ -444,7 +483,7 @@ const Hearts = (() => {
   }
   return { SUITS, SYM, SUIT_NAME, suit, rank, rankTxt, pts, sortHand, deal, passTarget,
     legalPlays, trickWinner, newGame, startHand, setPass, legalFor, playCard,
-    collectTrick, setReady, canFinish, finishHand, claimant, claimAll, startClaim, ackClaim, winsAll };
+    collectTrick, setReady, canFinish, finishHand, claimant, claimAll, startClaim, ackClaim, winsAll, takesAllPoints };
 })();
 if (typeof module !== 'undefined') module.exports = Hearts;
 
@@ -550,12 +589,15 @@ const I18N = (() => {
       waitingFor: l => `ממתין ל${l}`,
       claimYou: k => `אתה לוקח את כל ${k} הלקיחות שנשארו`, claimOther: (n, k) => `${n} לוקח/ת את כל ${k} הלקיחות שנשארו`,
       plusPts: p => `<bdi dir="ltr">+${p}</bdi> נקודות`, noMorePts: 'בלי נקודות נוספות',
-      pressOk: 'לחץ "אישור" כדי להמשיך', waitConfirm: l => `ממתין לאישור של ${l}`, allYours: 'כל הלקיחות שלך',
+      pressOk: 'לחץ "אישור" כדי להמשיך', waitConfirm: l => `ממתין לאישור של ${l}`, allYours: 'כל הלקיחות שלך', allPointsYours: 'כל הנקודות שלך',
       yourTurn: 'תורך', leadC2: 'פתח עם 2♣', yourLead: 'תורך להוביל', tapAgain: 'הקש שוב כדי לשחק', turnOf: n => `התור של ${n}`,
       tieFirst: 'תיקו במקום הראשון!', youWon: 'ניצחת!', wonBy: l => `${l} ניצח/ה`, and: ' ו', handOver: n => `סוף יד ${n}`,
       claimedYou: k => `✋ לקחת את ${k} הלקיחות האחרונות בבת אחת, כי היה ברור שאף אחד לא יכול לנצח בהן.`,
       claimedOther: (n, k) => `✋ ${n} לקח/ה את ${k} הלקיחות האחרונות בבת אחת, כי היה ברור שאף אחד לא יכול לנצח בהן.`,
-      moon: n => `🌙 ${n} ירה/תה בירח! כל השאר קיבלו 26.`,
+      moon: n => `🌙 ${n} ירה/תה בירח! כל השאר קיבלו 26.`, moonYou: '🌙 ירית בירח! כל השאר קיבלו 26.',
+      claimMoonYou: 'כל הנקודות שנשארו הולכות אליך: ירי בירח! 🌙', claimMoonOther: n => `כל הנקודות שנשארו הולכות ל${n}: ירי בירח! 🌙`,
+      claimedMoonYou: '✋ היד נסגרה מוקדם, כי היה ברור שכל הנקודות שנשארו הולכות אליך.',
+      claimedMoonOther: n => `✋ היד נסגרה מוקדם, כי היה ברור שכל הנקודות שנשארו הולכות ל${n}.`,
       colPlayer: 'שחקן', colThis: 'ביד הזו', nextHand: d => `היד הבאה: ${d}.`,
       computer: 'מחשב', handN: n => `יד ${n}`, gotCards: n => `קיבלת 3 קלפים מ${n}, הם מורמים ביד שלך`, gotCardsShort: 'קיבלת 3 קלפים, הם מורמים',
       passBtn: n => `העבר (${n}/3)`, cont: 'המשך', ok: 'אישור',
@@ -611,12 +653,15 @@ const I18N = (() => {
       waitingFor: l => `Waiting for ${l}`,
       claimYou: k => `You take all ${k} remaining tricks`, claimOther: (n, k) => `${n} takes all ${k} remaining tricks`,
       plusPts: p => `+${p} points`, noMorePts: 'No more points',
-      pressOk: 'Press "OK" to continue', waitConfirm: l => `Waiting for ${l} to confirm`, allYours: 'All tricks are yours',
+      pressOk: 'Press "OK" to continue', waitConfirm: l => `Waiting for ${l} to confirm`, allYours: 'All tricks are yours', allPointsYours: 'All points are yours',
       yourTurn: 'Your turn', leadC2: 'Lead the 2♣', yourLead: 'Your lead', tapAgain: 'Tap again to play', turnOf: n => `${n}'s turn`,
       tieFirst: 'Tied for first!', youWon: 'You won!', wonBy: l => `${l} won`, and: ' and ', handOver: n => `Hand ${n} over`,
       claimedYou: k => `✋ You took the last ${k} tricks at once, since no one could beat you.`,
       claimedOther: (n, k) => `✋ ${n} took the last ${k} tricks at once, since no one could beat them.`,
-      moon: n => `🌙 ${n} shot the moon! Everyone else gets 26.`,
+      moon: n => `🌙 ${n} shot the moon! Everyone else gets 26.`, moonYou: '🌙 You shot the moon! Everyone else gets 26.',
+      claimMoonYou: 'All remaining points go to you: you shoot the moon! 🌙', claimMoonOther: n => `All remaining points go to ${n}: shooting the moon! 🌙`,
+      claimedMoonYou: '✋ The hand ended early because all remaining points were sure to go to you.',
+      claimedMoonOther: n => `✋ The hand ended early because all remaining points were sure to go to ${n}.`,
       colPlayer: 'Player', colThis: 'This hand', nextHand: d => `Next hand: ${d === 'no passing' ? d : 'pass ' + d}.`,
       computer: 'Computer', handN: n => `Hand ${n}`, gotCards: n => `You got 3 cards from ${n}. They're raised in your hand`, gotCardsShort: 'Got 3 cards, raised',
       passBtn: n => `Pass (${n}/3)`, cont: 'Continue', ok: 'OK',
@@ -926,13 +971,16 @@ const Common = (() => {
     }
     if (st.phase === 'playing' && st.claiming != null) {
       const left = 13 - st.tricksPlayed, pts = (st.claimPts != null ? st.claimPts : null);
-      const msg = (st.claiming === mySeat ? I18N.t('claimYou', left) : I18N.t('claimOther', UI.esc(names[st.claiming]), left)) +
+      const moon = st.claimType === 'moon';
+      const msg = (moon
+        ? (st.claiming === mySeat ? I18N.t('claimMoonYou') : I18N.t('claimMoonOther', UI.esc(names[st.claiming])))
+        : (st.claiming === mySeat ? I18N.t('claimYou', left) : I18N.t('claimOther', UI.esc(names[st.claiming]), left))) +
         (pts != null ? `<br><small>${pts ? I18N.t('plusPts', pts) : I18N.t('noMorePts')}</small>` : '');
       const cards = (st.claimCards || []).map(UI.cardHTML).join('');
       const ack = st.claimAck || [];
       const wait = [0, 1, 2, 3].filter(s => !ack[s] && s !== mySeat).map(s => UI.esc(names[s]));
       const foot = !ack[mySeat] ? I18N.t('pressOk') : (wait.length ? I18N.t('waitConfirm', wait.join(', ')) : '');
-      return { center: `<div class="claim"><div>${msg}</div>${cards ? `<div class="claim-cards">${cards}</div>` : ''}${foot ? `<small class="claim-foot">${foot}</small>` : ''}</div>`, mine: st.claiming === mySeat ? I18N.t('allYours') : '' };
+      return { center: `<div class="claim"><div>${msg}</div>${cards ? `<div class="claim-cards">${cards}</div>` : ''}${foot ? `<small class="claim-foot">${foot}</small>` : ''}</div>`, mine: st.claiming === mySeat ? I18N.t(moon ? 'allPointsYours' : 'allYours') : '' };
     }
     if (st.phase === 'playing') {
       if (st.turn === mySeat) {
@@ -953,8 +1001,10 @@ const Common = (() => {
       title = w.includes(mySeat) ? I18N.t(w.length > 1 ? 'tieFirst' : 'youWon') : I18N.t('wonBy', w.map(i => names[i]).join(I18N.t('and')));
     } else title = I18N.t('handOver', st.handNum + 1);
     const cl = st.claimed && st.claimed.seat != null
-      ? `<p>${st.claimed.seat === mySeat ? I18N.t('claimedYou', st.claimed.tricks) : I18N.t('claimedOther', UI.esc(names[st.claimed.seat]), st.claimed.tricks)}</p>` : '';
-    const moon = st.moon != null ? `<p>${I18N.t('moon', UI.esc(names[st.moon]))}</p>` : '';
+      ? `<p>${st.claimed.kind === 'moon'
+        ? (st.claimed.seat === mySeat ? I18N.t('claimedMoonYou') : I18N.t('claimedMoonOther', UI.esc(names[st.claimed.seat])))
+        : (st.claimed.seat === mySeat ? I18N.t('claimedYou', st.claimed.tricks) : I18N.t('claimedOther', UI.esc(names[st.claimed.seat]), st.claimed.tricks))}</p>` : '';
+    const moon = st.moon != null ? `<p>${st.moon === mySeat ? I18N.t('moonYou') : I18N.t('moon', UI.esc(names[st.moon]))}</p>` : '';
     const min = Math.min(...st.scores);
     const rows = [0, 1, 2, 3].map(s => `<tr><td class="n">${UI.esc(names[s])}${s === mySeat && !I18N.isMeName(names[s]) ? I18N.t('me') : ''}</td><td dir="ltr">+${st.handDelta[s]}</td><td class="${st.scores[s] === min ? 'best' : ''}" style="font-family:var(--serif);font-weight:700">${st.scores[s]}</td></tr>`).join('');
     return `<h2>${UI.esc(title)}</h2>${cl}${moon}
