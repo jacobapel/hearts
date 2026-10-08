@@ -1,2 +1,0 @@
-# hearts
-Card game
